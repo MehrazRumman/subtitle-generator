@@ -1,12 +1,4 @@
-#!/usr/bin/env python3
-"""
-Subtitle generator: transcribes a video file and writes a .srt subtitle file.
-Uses faster-whisper for accurate transcription with proper timestamps.
 
-Usage:
-  python subtitle_generator.py movie.mp4
-  python subtitle_generator.py movie.mp4 --model small --translate
-"""
 
 import sys
 import argparse
@@ -62,7 +54,7 @@ def extract_audio(video_path: Path, out_wav: str, duration: float) -> None:
 
     for line in proc.stdout:
         line = line.strip()
-        # ffmpeg -progress emits `out_time_us=<microseconds>`
+      
         if line.startswith("out_time_us="):
             try:
                 us = int(line.split("=")[1])
@@ -186,7 +178,7 @@ Loading the .srt in VLC:
     )
     args = ap.parse_args()
 
-    # ── Validate input ────────────────────────────────────────────────────────
+  
     video = Path(args.video).expanduser().resolve()
     if not video.exists():
         print(f"Error: video file not found: {video}", file=sys.stderr)
@@ -205,15 +197,14 @@ Loading the .srt in VLC:
     print(f"  Output : {srt_path.name}")
     print(f"{'─'*55}\n")
 
-    # ── Get video duration for progress bars ──────────────────────────────────
+
     duration = get_duration(str(video))
 
-    # ── Load model ────────────────────────────────────────────────────────────
+   
     print("Loading Whisper model… (first run downloads model weights)")
     model = WhisperModel(args.model, device="cpu", compute_type="int8")
     print("Model ready.\n")
 
-    # ── Extract audio to temp file ────────────────────────────────────────────
     tmp_fd, tmp_wav = tempfile.mkstemp(suffix=".wav")
     os.close(tmp_fd)
 
@@ -221,12 +212,12 @@ Loading the .srt in VLC:
         extract_audio(video, tmp_wav, duration)
         print()
 
-        # ── Transcribe ────────────────────────────────────────────────────────
+
         srt_content = transcribe_to_srt(tmp_wav, duration, model, args.language, args.translate)
     finally:
         os.unlink(tmp_wav)
 
-    # ── Write .srt ────────────────────────────────────────────────────────────
+ 
     srt_path.write_text(srt_content, encoding="utf-8")
 
     print(f"\n{'─'*55}")
