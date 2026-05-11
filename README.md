@@ -17,7 +17,7 @@ Generate `.srt` subtitle files from any video using [faster-whisper](https://git
 ## Setup
 
 ```bash
-git clone https://github.com/yourusername/subtitle-generator
+git clone https://github.com/MehrazRumman/subtitle-generator
 cd subtitle-generator
 
 python -m venv venv
