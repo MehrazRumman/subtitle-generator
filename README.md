@@ -78,7 +78,7 @@ To load manually: **Subtitles → Add Subtitle File…**
 
 ```bash
 # Tamil movie, translate to English
-python subtitle_generator.py "Jana Nayagan (2026).mkv" --language ta --translate
+python subtitle_generator.py "example.mkv" --language ta --translate
 
 # Japanese anime, keep original language
 python subtitle_generator.py episode01.mkv --model small --language ja
