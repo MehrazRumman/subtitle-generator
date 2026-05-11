@@ -1,5 +1,3 @@
-
-
 import sys
 import argparse
 import subprocess
@@ -14,9 +12,12 @@ from tqdm import tqdm
 def format_timestamp(seconds: float) -> str:
     """Convert seconds to SRT timestamp format: HH:MM:SS,mmm"""
     ms = round(seconds * 1000)
-    h  = ms // 3_600_000;  ms %= 3_600_000
-    m  = ms // 60_000;     ms %= 60_000
-    s  = ms // 1_000;      ms %= 1_000
+    h = ms // 3_600_000
+    ms %= 3_600_000
+    m = ms // 60_000
+    ms %= 60_000
+    s = ms // 1_000
+    ms %= 1_000
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
@@ -24,12 +25,17 @@ def get_duration(path: str) -> float:
     """Return duration in seconds using ffprobe."""
     result = subprocess.run(
         [
-            "ffprobe", "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
             path,
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     try:
         return float(result.stdout.strip())
@@ -40,21 +46,38 @@ def get_duration(path: str) -> float:
 def extract_audio(video_path: Path, out_wav: str, duration: float) -> None:
     """Extract mono 16 kHz WAV audio from a video file, showing a tqdm progress bar."""
     cmd = [
-        "ffmpeg", "-y", "-i", str(video_path),
-        "-ar", "16000", "-ac", "1", "-f", "wav",
-        "-progress", "pipe:1", "-nostats",
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(video_path),
+        "-ar",
+        "16000",
+        "-ac",
+        "1",
+        "-f",
+        "wav",
+        "-progress",
+        "pipe:1",
+        "-nostats",
         out_wav,
-        "-loglevel", "error",
+        "-loglevel",
+        "error",
     ]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
 
-    bar = tqdm(total=100, desc="Extracting audio", unit="%",
-               bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%  [{elapsed}<{remaining}]")
+    bar = tqdm(
+        total=100,
+        desc="Extracting audio",
+        unit="%",
+        bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%  [{elapsed}<{remaining}]",
+    )
     last_pct = 0
 
     for line in proc.stdout:
         line = line.strip()
-      
+
         if line.startswith("out_time_us="):
             try:
                 us = int(line.split("=")[1])
@@ -97,10 +120,16 @@ def transcribe_to_srt(
 
     detected = getattr(info, "language", "unknown")
     print(f"  Detected language : {detected.upper()}")
-    print(f"  Task              : {'translate → English' if translate else f'transcribe ({detected.upper()})'}")
+    print(
+        f"  Task              : {'translate → English' if translate else f'transcribe ({detected.upper()})'}"
+    )
 
-    bar = tqdm(total=100, desc="Transcribing   ", unit="%",
-               bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%  [{elapsed}<{remaining}]")
+    bar = tqdm(
+        total=100,
+        desc="Transcribing   ",
+        unit="%",
+        bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%  [{elapsed}<{remaining}]",
+    )
     last_pct = 0
 
     blocks = []
@@ -110,7 +139,7 @@ def transcribe_to_srt(
         if not text:
             continue
         start = format_timestamp(seg.start)
-        end   = format_timestamp(seg.end)
+        end = format_timestamp(seg.end)
         blocks.append(f"{idx}\n{start} --> {end}\n{text}")
         idx += 1
 
@@ -160,25 +189,29 @@ Loading the .srt in VLC:
     )
     ap.add_argument("video", help="Path to the input video file")
     ap.add_argument(
-        "--model", default="base",
+        "--model",
+        default="base",
         choices=["tiny", "base", "small", "medium", "large"],
         help="Whisper model size (default: base)",
     )
     ap.add_argument(
-        "--language", default=None,
+        "--language",
+        default=None,
         help="Source language code, e.g. 'ja', 'ta', 'es' (default: auto-detect)",
     )
     ap.add_argument(
-        "--translate", action="store_true",
+        "--translate",
+        action="store_true",
         help="Translate subtitles to English (regardless of source language)",
     )
     ap.add_argument(
-        "--output", "-o", default=None,
+        "--output",
+        "-o",
+        default=None,
         help="Output .srt file path (default: same folder and name as video)",
     )
     args = ap.parse_args()
 
-  
     video = Path(args.video).expanduser().resolve()
     if not video.exists():
         print(f"Error: video file not found: {video}", file=sys.stderr)
@@ -189,7 +222,11 @@ Loading the .srt in VLC:
         print("Install it with:  brew install ffmpeg", file=sys.stderr)
         sys.exit(1)
 
-    srt_path = Path(args.output).expanduser().resolve() if args.output else video.with_suffix(".srt")
+    srt_path = (
+        Path(args.output).expanduser().resolve()
+        if args.output
+        else video.with_suffix(".srt")
+    )
 
     print(f"\n{'─'*55}")
     print(f"  Video  : {video.name}")
@@ -197,10 +234,8 @@ Loading the .srt in VLC:
     print(f"  Output : {srt_path.name}")
     print(f"{'─'*55}\n")
 
-
     duration = get_duration(str(video))
 
-   
     print("Loading Whisper model… (first run downloads model weights)")
     model = WhisperModel(args.model, device="cpu", compute_type="int8")
     print("Model ready.\n")
@@ -212,12 +247,12 @@ Loading the .srt in VLC:
         extract_audio(video, tmp_wav, duration)
         print()
 
-
-        srt_content = transcribe_to_srt(tmp_wav, duration, model, args.language, args.translate)
+        srt_content = transcribe_to_srt(
+            tmp_wav, duration, model, args.language, args.translate
+        )
     finally:
         os.unlink(tmp_wav)
 
- 
     srt_path.write_text(srt_content, encoding="utf-8")
 
     print(f"\n{'─'*55}")
@@ -225,7 +260,7 @@ Loading the .srt in VLC:
     print(f"  {srt_path}")
     print(f"{'─'*55}")
     print("\nTo play with subtitles:")
-    print(f"  vlc \"{video}\"")
+    print(f'  vlc "{video}"')
     print("  (VLC auto-loads the .srt if it has the same name as the video)\n")
 
 
