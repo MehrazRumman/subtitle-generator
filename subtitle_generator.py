@@ -256,7 +256,7 @@ Loading the .srt in VLC:
     srt_path.write_text(srt_content, encoding="utf-8")
 
     print(f"\n{'─'*55}")
-    print(f"  Done! Subtitle file saved:")
+    print("  Done! Subtitle file saved:")
     print(f"  {srt_path}")
     print(f"{'─'*55}")
     print("\nTo play with subtitles:")
